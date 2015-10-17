@@ -4,12 +4,12 @@
 
 package com.palantir.stash.codesearch.event;
 
+import com.atlassian.bitbucket.event.repository.RepositoryDeletedEvent;
+import com.atlassian.bitbucket.event.repository.RepositoryRefsChangedEvent;
+import com.atlassian.bitbucket.repository.RefChange;
+import com.atlassian.bitbucket.repository.RefChangeType;
+import com.atlassian.bitbucket.repository.Repository;
 import com.atlassian.event.api.EventListener;
-import com.atlassian.stash.event.RepositoryDeletedEvent;
-import com.atlassian.stash.event.RepositoryRefsChangedEvent;
-import com.atlassian.stash.repository.RefChange;
-import com.atlassian.stash.repository.RefChangeType;
-import com.atlassian.stash.repository.Repository;
 import com.palantir.stash.codesearch.repository.RepositoryServiceManager;
 import com.palantir.stash.codesearch.updater.SearchUpdater;
 
@@ -30,10 +30,10 @@ public class IndexerEventListener {
         Repository repository = event.getRepository();
         for (RefChange change : event.getRefChanges()) {
             if (change.getType() == RefChangeType.DELETE) {
-                updater.submitAsyncReindex(repository, change.getRefId(), 0);
+                updater.submitAsyncReindex(repository, change.getRef().getId(), 0);
             } else if (repositoryServiceManager.getBranchMap(repository)
-                .containsKey(change.getRefId())) {
-                updater.submitAsyncUpdate(repository, change.getRefId(), 0);
+                .containsKey(change.getRef().getId())) {
+                updater.submitAsyncUpdate(repository, change.getRef().getId(), 0);
             }
         }
     }
