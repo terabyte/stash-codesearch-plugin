@@ -26,7 +26,6 @@ import com.palantir.stash.codesearch.logger.PluginLoggerFactory;
 
 public class RepositoryServiceManagerImpl implements RepositoryServiceManager {
 
-	
     private static final int PAGE_SIZE = 1000;
 
     private final RepositoryService repositoryService;
