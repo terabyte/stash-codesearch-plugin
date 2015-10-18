@@ -40,7 +40,7 @@ public class AtlassianPluginTest {
     @Before
     public void setUp() {
         exceptionClasses = ImmutableSet.of(
-            "com.atlassian.stash.web.conditions.IsLoggedInCondition"
+            "com.atlassian.bitbucket.web.conditions.IsLoggedInCondition"
             );
     }
 

@@ -17,12 +17,12 @@ import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 
 import com.atlassian.soy.renderer.SoyTemplateRenderer;
-import com.atlassian.stash.exception.AuthorisationException;
-import com.atlassian.stash.i18n.KeyedMessage;
-import com.atlassian.stash.server.ApplicationPropertiesService;
-import com.atlassian.stash.user.Permission;
-import com.atlassian.stash.user.PermissionValidationService;
-import com.atlassian.stash.user.SecurityService;
+import com.atlassian.bitbucket.AuthorisationException;
+import com.atlassian.bitbucket.i18n.KeyedMessage;
+import com.atlassian.bitbucket.server.ApplicationPropertiesService;
+import com.atlassian.bitbucket.permission.Permission;
+import com.atlassian.bitbucket.permission.PermissionValidationService;
+import com.atlassian.bitbucket.user.SecurityService;
 import com.palantir.stash.codesearch.updater.SearchUpdater;
 
 public class GlobalSettingsServletTest {

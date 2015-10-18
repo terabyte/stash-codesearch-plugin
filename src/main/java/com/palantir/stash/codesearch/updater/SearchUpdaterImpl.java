@@ -26,9 +26,9 @@ import org.elasticsearch.index.query.QueryBuilders;
 import org.slf4j.Logger;
 import org.springframework.beans.factory.DisposableBean;
 
-import com.atlassian.stash.repository.Branch;
-import com.atlassian.stash.repository.Repository;
-import com.atlassian.stash.scm.git.GitScm;
+import com.atlassian.bitbucket.repository.Branch;
+import com.atlassian.bitbucket.repository.Repository;
+import com.atlassian.bitbucket.scm.git.GitScm;
 import com.palantir.stash.codesearch.admin.GlobalSettings;
 import com.palantir.stash.codesearch.admin.RepositorySettings;
 import com.palantir.stash.codesearch.admin.SettingsManager;

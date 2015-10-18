@@ -9,35 +9,36 @@ import java.util.Map;
 
 import org.slf4j.Logger;
 
-import com.atlassian.stash.exception.AuthorisationException;
-import com.atlassian.stash.repository.Branch;
-import com.atlassian.stash.repository.RefOrder;
-import com.atlassian.stash.repository.Repository;
-import com.atlassian.stash.repository.RepositoryBranchesRequest;
-import com.atlassian.stash.repository.RepositoryMetadataService;
-import com.atlassian.stash.repository.RepositoryService;
-import com.atlassian.stash.user.Permission;
-import com.atlassian.stash.user.PermissionValidationService;
-import com.atlassian.stash.util.Page;
-import com.atlassian.stash.util.PageRequest;
-import com.atlassian.stash.util.PageRequestImpl;
+import com.atlassian.bitbucket.AuthorisationException;
+import com.atlassian.bitbucket.repository.Branch;
+import com.atlassian.bitbucket.repository.RefOrder;
+import com.atlassian.bitbucket.repository.Repository;
+import com.atlassian.bitbucket.repository.RepositoryBranchesRequest;
+import com.atlassian.bitbucket.repository.RefService;
+import com.atlassian.bitbucket.repository.RepositoryService;
+import com.atlassian.bitbucket.permission.Permission;
+import com.atlassian.bitbucket.permission.PermissionValidationService;
+import com.atlassian.bitbucket.util.Page;
+import com.atlassian.bitbucket.util.PageRequest;
+import com.atlassian.bitbucket.util.PageRequestImpl;
 import com.google.common.collect.ImmutableMap;
 import com.palantir.stash.codesearch.logger.PluginLoggerFactory;
 
 public class RepositoryServiceManagerImpl implements RepositoryServiceManager {
 
+	
     private static final int PAGE_SIZE = 1000;
 
     private final RepositoryService repositoryService;
 
-    private final RepositoryMetadataService repositoryMetadataService;
+    private final RefService repositoryMetadataService;
 
     private final Logger log;
 
     public RepositoryServiceManagerImpl(
         PluginLoggerFactory plf,
         RepositoryService repositoryService,
-        RepositoryMetadataService repositoryMetadataService) {
+        RefService repositoryMetadataService) {
         this.repositoryService = repositoryService;
         this.repositoryMetadataService = repositoryMetadataService;
         this.log = plf.getLogger(this.getClass().toString());
@@ -79,7 +80,7 @@ public class RepositoryServiceManagerImpl implements RepositoryServiceManager {
         PageRequest req = new PageRequestImpl(0, PAGE_SIZE);
         Map<String, Branch> branchMap = new HashMap<String, Branch>();
         RepositoryBranchesRequest rbr =
-            new RepositoryBranchesRequest.Builder().repository(repository).order(RefOrder.ALPHABETICAL).build();
+        	new RepositoryBranchesRequest.Builder(repository).order(RefOrder.ALPHABETICAL).build();
         while (true) {
             Page<? extends Branch> branchPage = repositoryMetadataService.getBranches(rbr, req);
 
@@ -105,7 +106,7 @@ public class RepositoryServiceManagerImpl implements RepositoryServiceManager {
     }
 
     @Override
-    public RepositoryMetadataService getRepositoryMetadataService() {
+    public RefService getRepositoryMetadataService() {
         return repositoryMetadataService;
     }
 
