@@ -1,4 +1,8 @@
-# Stash Codesearch
+# Stash Codesearch 
+
+Bitbucket Server 4.X Build Status: [![Build Status](https://travis-ci.org/terabyte/stash-codesearch-plugin.svg?branch=master)](https://travis-ci.org/terabyte/stash-codesearch-plugin)
+
+Stash 3.X Build Status: [![Build Status](https://travis-ci.org/terabyte/stash-codesearch-plugin.svg?branch=stash-3.x-backports)](https://travis-ci.org/terabyte/stash-codesearch-plugin)
 
 Stash Codesearch is a service for searching and analyzing files and commits in Atlassian Stash Git repositories. It is backed by ElasticSearch (v1.3.3).
 
