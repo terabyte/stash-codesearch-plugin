@@ -18,6 +18,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.PatternSyntaxException;
 
+import com.atlassian.sal.api.lifecycle.LifecycleAware;
 import org.elasticsearch.action.admin.indices.alias.IndicesAliasesRequestBuilder;
 import org.elasticsearch.cluster.metadata.AliasMetaData;
 import org.elasticsearch.common.collect.ImmutableOpenMap;
@@ -37,7 +38,7 @@ import com.palantir.stash.codesearch.logger.PluginLoggerFactory;
 import com.palantir.stash.codesearch.repository.RepositoryServiceManager;
 import com.palantir.stash.codesearch.search.SearchFilterUtils;
 
-public class SearchUpdaterImpl implements SearchUpdater, DisposableBean {
+public class SearchUpdaterImpl implements SearchUpdater, LifecycleAware {
 
     private static class ResizableSemaphore extends Semaphore {
 
@@ -130,9 +131,18 @@ public class SearchUpdaterImpl implements SearchUpdater, DisposableBean {
         this.concurrencyLimit = GlobalSettings.MAX_CONCURRENT_INDEXING_LB;
         this.semaphore = new ResizableSemaphore(concurrencyLimit, true);
         this.jobPool = new ScheduledThreadPoolExecutor(concurrencyLimit * 5);
+    }
+
+    @Override
+    public void onStart() {
         initializeAliasedIndex(ES_UPDATEALIAS, false);
         redirectAndDeleteAliasedIndex(ES_SEARCHALIAS, ES_UPDATEALIAS);
         settingsManager.addSearchUpdater(this);
+    }
+
+    @Override
+    public void onStop() {
+        jobPool.shutdown();
     }
 
     // Return the name of the index pointed to by an alias (null if no index found)
@@ -618,6 +628,7 @@ public class SearchUpdaterImpl implements SearchUpdater, DisposableBean {
 
     @Override
     public boolean reindexAll() {
+        log.info("******** Reindexing All ********");
         GlobalSettings globalSettings = settingsManager.getGlobalSettings();
         if (!globalSettings.getIndexingEnabled()) {
             log.warn("Not performing a complete reindex since indexing is disabled");
@@ -664,6 +675,7 @@ public class SearchUpdaterImpl implements SearchUpdater, DisposableBean {
         } finally {
             isReindexingAll.getAndSet(false);
         }
+        log.info("******** Reindexing Completed ********");
         return true;
     }
 
@@ -681,11 +693,6 @@ public class SearchUpdaterImpl implements SearchUpdater, DisposableBean {
             jobPool.setMaximumPoolSize(concurrencyLimit * 5);
             semaphore.resize(concurrencyLimit);
         }
-    }
-
-    @Override
-    public void destroy() {
-        jobPool.shutdown();
     }
 
 }
