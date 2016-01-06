@@ -22,7 +22,7 @@ Stash Codesearch was written by Palantir Technologies and open-sourced under the
 
 This project uses versions determined by `git describe --dirty='-dirty' --abbrev=12`, and thus versions are of the form 1.2.3-N-gX where N is the number of commits since that tag and X is the exact 12-character prefix of the sha1 the version was built from.
 
-If you build using `./build/invoke-sdk.sh`, the version will be set automatically.  Alternatively, you can set the DOMAIN_VERSION environemnt variable when invoking maven directly to override the version.
+If you build using `./bin/invoke-sdk.sh`, the version will be set automatically.  Alternatively, you can set the DOMAIN_VERSION environemnt variable when invoking maven directly to override the version.
 
 This is important because Atlassian plugins use OSGi and their version strings *must* be of the form:
 
