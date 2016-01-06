@@ -173,6 +173,7 @@ public class SearchUpdaterImpl implements SearchUpdater, LifecycleAware {
         String newIndex = random.nextLong() + "-" + System.nanoTime();
         try {
             es.getClient().admin().indices().prepareCreate(newIndex)
+                    // todo: this feels like it should be coming from a classpath resource since it's all static
                 // Latest indexed note schema
                 .addMapping("latestindexed",
                     jsonBuilder().startObject()
@@ -586,23 +587,9 @@ public class SearchUpdaterImpl implements SearchUpdater, LifecycleAware {
         }
         log.warn("Manual reindex triggered for {}^{} (expensive operation, use sparingly)", projectKey, repositorySlug);
 
-        // Delete documents for this repository
-        log.warn("Deleting {}^{} for manual reindexing", projectKey, repositorySlug);
-        for (int i = 0; i < 5; ++i) { // since ES doesn't have a refresh setting for delete by
-                                      // query requests, we just spam multiple requests.
-            es.getClient().prepareDeleteByQuery(ES_UPDATEALIAS)
-                .setRouting(projectKey + '^' + repositorySlug)
-                .setQuery(QueryBuilders.filteredQuery(
-                    QueryBuilders.matchAllQuery(),
-                    sfu.projectRepositoryFilter(projectKey, repositorySlug)))
-                .get();
-            try {
-                Thread.sleep(200);
-            } catch (InterruptedException e) {
-                log.warn("Caught InterruptedException while trying to sleep", e);
-            }
-        }
-        log.warn("Deletion of {}^{} completed", projectKey, repositorySlug);
+        //todo: decide if it's worthwhile to disable refresh for faster bulk indexing or not.
+
+        deleteRepository(projectKey, repositorySlug);
 
         // Search for repository
         Repository repository = repositoryServiceManager.getRepositoryService().getBySlug(
@@ -613,22 +600,63 @@ public class SearchUpdaterImpl implements SearchUpdater, LifecycleAware {
         }
 
         // Submit and wait for each job
-        List<Future<Void>> futures = new ArrayList<Future<Void>>();
-        for (Branch branch : repositoryServiceManager.getBranchMap(repository).values()) {
-            // No need to explicitly trigger reindex, since index is empty.
-            futures.add(submitAsyncUpdate(repository, branch.getId(), 0));
-        }
-        for (Future<Void> future : futures) {
-            waitForFuture(future);
-        }
+        List<Future<Void>> futures = updateRepository(repository);
+        waitForFutures(futures);
 
         log.warn("Manual reindex of {}^{} completed", projectKey, repositorySlug);
         return true;
     }
 
+    private List<Future<Void>> updateRepository(Repository repository) {
+        List<Future<Void>> futures = new ArrayList<Future<Void>>();
+        for (Branch branch : repositoryServiceManager.getBranchMap(repository).values()) {
+            // No need to explicitly trigger reindex, since index is empty.
+            futures.add(submitAsyncUpdate(repository, branch.getId(), 0));
+        }
+        return futures;
+    }
+
+    private void waitForFutures(List<Future<Void>> futures) {
+        for (Future<Void> future : futures) {
+            waitForFuture(future);
+        }
+    }
+
+    private void deleteRepository(final String projectKey, final String repositorySlug) {
+        // Delete documents for this repository
+        log.warn("Deleting {}^{} for manual reindexing", projectKey, repositorySlug);
+        for (int i = 0; i < 5; ++i) { // since ES doesn't have a refresh setting for delete by
+            // query requests, we just spam multiple requests.
+            es.getClient().prepareDeleteByQuery(ES_UPDATEALIAS)
+                    .setRouting(projectKey + '^' + repositorySlug)
+                    .setQuery(QueryBuilders.filteredQuery(
+                            QueryBuilders.matchAllQuery(),
+                            sfu.projectRepositoryFilter(projectKey, repositorySlug)))
+                    .get();
+            try {
+                Thread.sleep(200);
+            } catch (InterruptedException e) {
+                log.warn("Caught InterruptedException while trying to sleep", e);
+            }
+        }
+        log.warn("Deletion of {}^{} completed", projectKey, repositorySlug);
+    }
+
+    private void setIndexInterval(String interval) {
+        es.getClient().admin().indices().prepareUpdateSettings(ES_UPDATEALIAS)
+                .setSettings(ImmutableSettings.builder()
+                        .put("index.refresh_interval", interval))
+                .get();
+    }
+
+    private void optimiseIndicies() {
+        es.getClient().admin().indices().prepareOptimize(ES_UPDATEALIAS).get();
+        redirectAndDeleteAliasedIndex(ES_SEARCHALIAS, ES_UPDATEALIAS);
+    }
+
     @Override
-    public boolean reindexAll() {
-        log.info("******** Reindexing All ********");
+    public boolean reindexAll() {// todo: convert this to some kind of long running task and display progress
+        log.warn("******** Reindexing All ********");
         GlobalSettings globalSettings = settingsManager.getGlobalSettings();
         if (!globalSettings.getIndexingEnabled()) {
             log.warn("Not performing a complete reindex since indexing is disabled");
@@ -648,34 +676,22 @@ public class SearchUpdaterImpl implements SearchUpdater, LifecycleAware {
             });
 
             // Disable refresh for faster bulk indexing
-            es.getClient().admin().indices().prepareUpdateSettings(ES_UPDATEALIAS)
-                .setSettings(ImmutableSettings.builder()
-                    .put("index.refresh_interval", "-1"))
-                .get();
+            setIndexInterval("-1");
 
             // Submit and wait for each job
             List<Future<Void>> futures = new ArrayList<Future<Void>>();
             for (Repository repo : repositoryServiceManager.getRepositoryMap(null).values()) {
-                for (Branch branch : repositoryServiceManager.getBranchMap(repo).values()) {
-                    // No need to explicitly trigger reindex, since index is empty.
-                    futures.add(submitAsyncUpdate(repo, branch.getId(), 0));
-                }
+                futures.addAll(updateRepository(repo));
             }
-            for (Future<Void> future : futures) {
-                waitForFuture(future);
-            }
+            waitForFutures(futures);
 
             // Re-enable refresh & optimize, enable searching on index
-            es.getClient().admin().indices().prepareUpdateSettings(ES_UPDATEALIAS)
-                .setSettings(ImmutableSettings.builder()
-                    .put("index.refresh_interval", "1s"))
-                .get();
-            es.getClient().admin().indices().prepareOptimize(ES_UPDATEALIAS).get();
-            redirectAndDeleteAliasedIndex(ES_SEARCHALIAS, ES_UPDATEALIAS);
+            setIndexInterval("1s");
+            optimiseIndicies();
         } finally {
             isReindexingAll.getAndSet(false);
         }
-        log.info("******** Reindexing Completed ********");
+        log.warn("******** Reindexing Completed ********");
         return true;
     }
 
