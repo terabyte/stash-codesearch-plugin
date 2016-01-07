@@ -9,11 +9,18 @@ package com.palantir.stash.codesearch.elasticsearch;
 import com.atlassian.sal.api.lifecycle.LifecycleAware;
 import org.apache.log4j.Logger;
 import org.elasticsearch.common.collect.Tuple;
+import org.elasticsearch.common.settings.ImmutableSettings;
+import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.common.transport.InetSocketTransportAddress;
 import org.elasticsearch.client.transport.TransportClient;
 
 public class ElasticSearchImpl implements ElasticSearch, LifecycleAware {
     private final Logger log = Logger.getLogger(getClass());
+
+    private final Settings DEFAULT_SETTINGS = ImmutableSettings.settingsBuilder()
+            .classLoader(getClass().getClassLoader())
+            .loadFromClasspath("elasticsearch.yml")
+            .build();
 
     private TransportClient client;
 
@@ -29,7 +36,7 @@ public class ElasticSearchImpl implements ElasticSearch, LifecycleAware {
         // todo: use elasticsearch.yaml as the source of the default
         String hostname = null;
         // get hostname from elasticsearch.yml
-        hostname = client.settings().get("client.transport.cluster.host");
+        hostname = DEFAULT_SETTINGS.get("client.transport.cluster.host");
 
         if (hostname==null) {
             log.error("Unable to determine hostname");
@@ -44,7 +51,7 @@ public class ElasticSearchImpl implements ElasticSearch, LifecycleAware {
         Tuple<Integer,Integer> portRange = null;
 
         // get port range from elasticsearch.yml
-        String portSetting = client.settings().get("client.transport.cluster.port");
+        String portSetting = DEFAULT_SETTINGS.get("client.transport.cluster.port");
         String[] toks = portSetting.split("-");
         if (toks.length == 1) {
             try {
@@ -76,7 +83,7 @@ public class ElasticSearchImpl implements ElasticSearch, LifecycleAware {
             client.close();
         }
 
-        client = new TransportClient();
+        client = new TransportClient(DEFAULT_SETTINGS);
         String host = getHostname();
         Tuple<Integer,Integer> portRange = getPortRange();
 

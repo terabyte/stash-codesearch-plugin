@@ -168,8 +168,8 @@
     <properties>
         <dev.mode>true</dev.mode>
         <amps.version>6.1.0</amps.version>
-        <bitbucket.version>4.0.0</bitbucket.version> <!-- see https://maven.atlassian.com/content/groups/public/com/atlassian/bitbucket/server/bitbucket-webapp/ -->
-        <bitbucket.data.version>${bitbucket.version}</bitbucket.data.version> <!-- see https://maven.atlassian.com/content/groups/public/com/atlassian/bitbucket/server/bitbucket-it-resources/ -->
+        <bitbucket.version>4.2.0</bitbucket.version>
+        <bitbucket.data.version>${bitbucket.version}</bitbucket.data.version>
         <bitbucket.containerId>tomcat8x</bitbucket.containerId>
         <elasticsearch.version>1.6.0</elasticsearch.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
