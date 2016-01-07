@@ -15,10 +15,6 @@ public class ElasticSearchImpl implements ElasticSearch, LifecycleAware {
 
     private final TransportClient client;
 
-    public static final String ES_UPDATEALIAS = "scs-update";
-
-    public static final String ES_SEARCHALIAS = "scs-search";
-
     public ElasticSearchImpl () throws SettingsException {
         client = new TransportClient();
     }
