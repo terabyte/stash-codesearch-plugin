@@ -7,66 +7,94 @@
 package com.palantir.stash.codesearch.elasticsearch;
 
 import com.atlassian.sal.api.lifecycle.LifecycleAware;
-import org.elasticsearch.common.settings.SettingsException;
+import org.apache.log4j.Logger;
+import org.elasticsearch.common.collect.Tuple;
 import org.elasticsearch.common.transport.InetSocketTransportAddress;
 import org.elasticsearch.client.transport.TransportClient;
 
 public class ElasticSearchImpl implements ElasticSearch, LifecycleAware {
+    private final Logger log = Logger.getLogger(getClass());
 
-    private final TransportClient client;
-
-    public ElasticSearchImpl () throws SettingsException {
-        client = new TransportClient();
-    }
+    private TransportClient client;
 
     @Override
     public TransportClient getClient () {
+        if (client==null) {
+            initClient();
+        }
         return client;
     }
 
-    @Override
-    public void onStart() {
-        // HACK: get hostname from elasticsearch.yml todo: use elasticsearch.yaml as the source of the default
-        String host = client.settings().get("client.transport.cluster.host");
-        if (host == null) {
-            throw new SettingsException(
-                    "client.transport.cluster.host must be set to a cluster data node address");
+    private String getHostname() {
+        // todo: use elasticsearch.yaml as the source of the default
+        String hostname = null;
+        // get hostname from elasticsearch.yml
+        hostname = client.settings().get("client.transport.cluster.host");
+
+        if (hostname==null) {
+            log.error("Unable to determine hostname");
+            hostname = ""; // avoid NPE's
         }
 
-        // HACK: get port/port range from elasticsearch.yml (format for ranges is 1234-2345)
-        int fromPort = 0, toPort = 0;
+        return hostname;
+    }
+
+    private Tuple<Integer,Integer> getPortRange() {
+        // todo: use elasticsearch.yaml as the source of the default
+        Tuple<Integer,Integer> portRange = null;
+
+        // get port range from elasticsearch.yml
         String portSetting = client.settings().get("client.transport.cluster.port");
-        if (portSetting == null) {
-            throw new SettingsException(
-                    "client.transport.cluster.port mulst be set to a valid port range.");
-        }
         String[] toks = portSetting.split("-");
         if (toks.length == 1) {
             try {
-                fromPort = toPort = Integer.parseInt(toks[0]);
+                int port = Integer.parseInt(toks[0]);
+                portRange = new Tuple<>(port,port);
             } catch (NumberFormatException e) {
-                throw new SettingsException("Error parsing client.transport.cluster.port", e);
+                log.error("Error parsing client.transport.cluster.port", e);
             }
         } else if (toks.length == 2) {
             try {
-                fromPort = Integer.parseInt(toks[0]);
-                toPort = Integer.parseInt(toks[1]);
+                int fromPort = Integer.parseInt(toks[0]);
+                int toPort = Integer.parseInt(toks[1]);
+                portRange = new Tuple<>(fromPort,toPort);
             } catch (NumberFormatException e) {
-                throw new SettingsException("Error parsing client.transport.cluster.port", e);
+                log.error("Error parsing client.transport.cluster.port", e);
             }
-        } else {
-            throw new SettingsException(
-                    "Error parsing client.transport.cluster.port (too may dashes)");
         }
 
+        if (portRange==null) {
+            log.error("Unable to determine port range");
+            portRange = new Tuple<>(0,0);// fail in a non-destructive way
+        }
+
+        return portRange;
+    }
+
+    private void initClient() {
+        if (client!=null) {
+            client.close();
+        }
+
+        client = new TransportClient();
+        String host = getHostname();
+        Tuple<Integer,Integer> portRange = getPortRange();
+
         // Create a new transport address for reach port in the port range
-        for (int port = fromPort; port <= toPort; ++port) {
+        for (int port = portRange.v1(); port <= portRange.v2(); ++port) {
             client.addTransportAddress(new InetSocketTransportAddress(host, port));
         }
     }
 
     @Override
+    public void onStart() {
+        initClient();
+    }
+
+    @Override
     public void onStop() {
-        client.close();
+        if (client!=null) {
+            client.close();
+        }
     }
 }
