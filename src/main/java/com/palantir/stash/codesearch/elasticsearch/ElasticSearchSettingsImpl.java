@@ -20,15 +20,9 @@ public class ElasticSearchSettingsImpl implements ElasticSearchSettings {
             .build();
 
     private final PluginSettingsFactory pluginSettingsFactory;
-    private final EventPublisher eventPublisher;
 
-    public ElasticSearchSettingsImpl(PluginSettingsFactory pluginSettingsFactory, EventPublisher eventPublisher) {
+    public ElasticSearchSettingsImpl(PluginSettingsFactory pluginSettingsFactory) {
         this.pluginSettingsFactory = pluginSettingsFactory;
-        this.eventPublisher = eventPublisher;
-    }
-
-    private void settingsUpdated() {
-        eventPublisher.publish(new ElasticSearchSettingsUpdatedEvent());
     }
 
     @Override
@@ -43,7 +37,6 @@ public class ElasticSearchSettingsImpl implements ElasticSearchSettings {
     @Override
     public void setIndexFolder(String indexfolder) {
         pluginSettingsFactory.createGlobalSettings().put(INDEX_FOLDER_KEY,indexfolder);
-        settingsUpdated();
     }
 
     @Override
@@ -58,7 +51,6 @@ public class ElasticSearchSettingsImpl implements ElasticSearchSettings {
     @Override
     public void setClusterName(String clusterName) {
         pluginSettingsFactory.createGlobalSettings().put(CLUSTER_NAME_KEY,clusterName);
-        settingsUpdated();
     }
 
     @Override
@@ -73,7 +65,6 @@ public class ElasticSearchSettingsImpl implements ElasticSearchSettings {
     @Override
     public void setHostName(String hostName) {
         pluginSettingsFactory.createGlobalSettings().put(HOST_NAME_KEY,hostName);
-        settingsUpdated();
     }
 
     @Override
@@ -88,18 +79,16 @@ public class ElasticSearchSettingsImpl implements ElasticSearchSettings {
     @Override
     public void setPortRange(String portRange) {
         pluginSettingsFactory.createGlobalSettings().put(PORT_RANGE_KEY,portRange);
-        settingsUpdated();
     }
 
     @Override
     public boolean useEmbeddedES() {
-        return Boolean.TRUE.equals(pluginSettingsFactory.createGlobalSettings().get(EMBEDDED_ES_KEY));
+        return "T".equals(pluginSettingsFactory.createGlobalSettings().get(EMBEDDED_ES_KEY));
     }
 
     @Override
     public void setUseEmbeddedES(boolean state) {
-        pluginSettingsFactory.createGlobalSettings().put(EMBEDDED_ES_KEY,state);
-        settingsUpdated();
+        pluginSettingsFactory.createGlobalSettings().put(EMBEDDED_ES_KEY,state ? "T" : "F");
     }
 
     @Override

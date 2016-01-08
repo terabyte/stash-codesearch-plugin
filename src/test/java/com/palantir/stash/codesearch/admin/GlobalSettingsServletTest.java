@@ -7,8 +7,8 @@ import java.util.Map;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import com.palantir.stash.codesearch.elasticsearch.ElasticSearch;
 import com.palantir.stash.codesearch.elasticsearch.ElasticSearchSettings;
-import com.palantir.stash.codesearch.elasticsearch.ElasticSearchSettingsImpl;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -53,6 +53,8 @@ public class GlobalSettingsServletTest {
     private SoyTemplateRenderer str;
     @Mock
     private ElasticSearchSettings elasticSearchSettings;
+    @Mock
+    private ElasticSearch es;
 
     private GlobalSettingsServlet servlet;
 
@@ -70,7 +72,7 @@ public class GlobalSettingsServletTest {
         Mockito.when(elasticSearchSettings.getPortRange()).thenReturn("needs wired tests");
         Mockito.when(elasticSearchSettings.useEmbeddedES()).thenReturn(false);
 
-        servlet = new GlobalSettingsServlet(aps, sm, pvs, su, ss, str, elasticSearchSettings);
+        servlet = new GlobalSettingsServlet(aps, sm, pvs, su, ss, str, elasticSearchSettings, es);
     }
 
     @Test

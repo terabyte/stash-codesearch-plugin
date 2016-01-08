@@ -6,6 +6,7 @@
 
 package com.palantir.stash.codesearch.elasticsearch;
 
+import org.elasticsearch.ElasticsearchException;
 import org.elasticsearch.client.Client;
 
 public class ElasticSearchImpl implements ElasticSearch {
@@ -19,11 +20,25 @@ public class ElasticSearchImpl implements ElasticSearch {
         this.remoteEsService = remoteEsService;
     }
 
+    private EsService getEsService() {
+        if (elasticSearchSettings.useEmbeddedES()) {
+            return embeddedEsService;
+        }
+        return remoteEsService;
+    }
+
     @Override
     public Client getClient () {
-        if (elasticSearchSettings.useEmbeddedES()) {
-            return embeddedEsService.getClient();
-        }
-        return remoteEsService.getClient();
+        return getEsService().getClient();
+    }
+
+    @Override
+    public void resetClient() {
+        getEsService().resetClient();
+    }
+
+    @Override
+    public void testClient() throws ElasticsearchException {
+        getEsService().testClient();
     }
 }

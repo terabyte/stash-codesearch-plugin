@@ -197,7 +197,7 @@ public class SearchUpdaterImpl implements SearchUpdater, LifecycleAware {
                         .endObject()
                         .endObject()
                         .endObject());
-/*
+//*
             // Commit schema
             requestBuilder.addMapping("commit",
                     jsonBuilder().startObject()

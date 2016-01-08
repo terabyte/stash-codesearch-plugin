@@ -1,8 +1,7 @@
 package com.palantir.stash.codesearch.elasticsearch;
 
-import com.atlassian.event.api.EventListener;
-import com.atlassian.event.api.EventPublisher;
 import org.apache.log4j.Logger;
+import org.elasticsearch.ElasticsearchException;
 import org.elasticsearch.client.Client;
 import org.elasticsearch.client.transport.TransportClient;
 import org.elasticsearch.common.collect.Tuple;
@@ -13,14 +12,11 @@ public class RemoteEsServiceImpl implements RemoteEsService, DisposableBean {
     private final Logger log = Logger.getLogger(getClass());
 
     private final ElasticSearchSettings elasticSearchSettings;
-    private final EventPublisher eventPublisher;
 
     private TransportClient client;
 
-    public RemoteEsServiceImpl(ElasticSearchSettings elasticSearchSettings, EventPublisher eventPublisher) {
+    public RemoteEsServiceImpl(ElasticSearchSettings elasticSearchSettings) {
         this.elasticSearchSettings = elasticSearchSettings;
-        this.eventPublisher = eventPublisher;
-        this.eventPublisher.register(this);
     }
 
     private Tuple<Integer,Integer> splitPortRange(String portSetting) {
@@ -66,7 +62,8 @@ public class RemoteEsServiceImpl implements RemoteEsService, DisposableBean {
         return client;
     }
 
-    private void reset() {
+    @Override
+    public void resetClient() {
         if (client!=null) {
             client.close();
             client = null;
@@ -75,12 +72,11 @@ public class RemoteEsServiceImpl implements RemoteEsService, DisposableBean {
 
     @Override
     public void destroy() throws Exception {
-        reset();
-        eventPublisher.unregister(this);
+        resetClient();
     }
 
-    @EventListener
-    public void settingsUpdatedEvent(ElasticSearchSettingsUpdatedEvent event) {
-        reset();
+    @Override
+    public void testClient() throws ElasticsearchException {
+        getClient().admin().indices().prepareCreate("test").get();
     }
 }

@@ -38,7 +38,9 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import com.palantir.stash.codesearch.elasticsearch.ElasticSearch;
 import com.palantir.stash.codesearch.elasticsearch.ElasticSearchSettings;
+import org.elasticsearch.ElasticsearchException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -63,18 +65,13 @@ public class GlobalSettingsServlet extends HttpServlet {
     private static final Logger log = LoggerFactory.getLogger(GlobalSettingsServlet.class);
 
     private final ApplicationPropertiesService propertiesService;
-
     private final SettingsManager settingsManager;
-
     private final PermissionValidationService validationService;
-
     private final SearchUpdater searchUpdater;
-
     private final SecurityService securityService;
-
     private final SoyTemplateRenderer soyTemplateRenderer;
-
     private final ElasticSearchSettings elasticSearchSettings;
+    private final ElasticSearch es;
 
     public GlobalSettingsServlet(
             ApplicationPropertiesService propertiesService,
@@ -83,7 +80,8 @@ public class GlobalSettingsServlet extends HttpServlet {
             SearchUpdater searchUpdater,
             SecurityService securityService,
             SoyTemplateRenderer soyTemplateRenderer,
-            ElasticSearchSettings elasticSearchSettings) {
+            ElasticSearchSettings elasticSearchSettings,
+            ElasticSearch es) {
         this.propertiesService = propertiesService;
         this.settingsManager = settingsManager;
         this.validationService = validationService;
@@ -91,6 +89,7 @@ public class GlobalSettingsServlet extends HttpServlet {
         this.securityService = securityService;
         this.soyTemplateRenderer = soyTemplateRenderer;
         this.elasticSearchSettings = elasticSearchSettings;
+        this.es = es;
     }
 
     private static int parseInt(
@@ -276,27 +275,28 @@ public class GlobalSettingsServlet extends HttpServlet {
             errors.add(e.getMessage());
         }
 
-        elasticSearchSettings.setUseEmbeddedES("embedded".equals(req.getParameter("useEmbeddedES")));
-        String clusterName = req.getParameter("clusterName");
-        if (clusterName!=null && !clusterName.isEmpty()) {
-            elasticSearchSettings.setClusterName(clusterName);
-        }
-        String hostName = req.getParameter("hostName");
-        if (hostName!=null && !hostName.isEmpty()) {
-            elasticSearchSettings.setHostName(hostName);
-        }
-        String portRange = req.getParameter("portRange");
-        if (portRange!=null && !portRange.isEmpty()) {
-            elasticSearchSettings.setPortRange(portRange);
-        }
-        String indexFolder = req.getParameter("indexFolder");
-        if (indexFolder!=null && !indexFolder.isEmpty()) {
-            elasticSearchSettings.setIndexFolder(indexFolder);
-        }
-
         // Update settings object iff no parse errors
         GlobalSettings settings;
         if (errors.isEmpty()) {
+            elasticSearchSettings.setUseEmbeddedES("embedded".equals(req.getParameter("useEmbeddedES")));
+            String clusterName = req.getParameter("clusterName");
+            if (clusterName!=null && !clusterName.isEmpty()) {
+                elasticSearchSettings.setClusterName(clusterName);
+            }
+            String hostName = req.getParameter("hostName");
+            if (hostName!=null && !hostName.isEmpty()) {
+                elasticSearchSettings.setHostName(hostName);
+            }
+            String portRange = req.getParameter("portRange");
+            if (portRange!=null && !portRange.isEmpty()) {
+                elasticSearchSettings.setPortRange(portRange);
+            }
+            String indexFolder = req.getParameter("indexFolder");
+            if (indexFolder!=null && !indexFolder.isEmpty()) {
+                elasticSearchSettings.setIndexFolder(indexFolder);
+            }
+            es.resetClient();
+
             settings = settingsManager.setGlobalSettings(indexingEnabled,
                 maxConcurrentIndexing, maxFileSize, searchTimeout, noHighlightExtensions,
                 maxPreviewLines, maxMatchLines, maxFragments, pageSize, commitHashBoost,
@@ -328,6 +328,13 @@ public class GlobalSettingsServlet extends HttpServlet {
             }
         } else {
             settings = settingsManager.getGlobalSettings();
+        }
+
+        try {
+            es.testClient();
+        } catch (ElasticsearchException e) {
+            errors.add("ES Client not connected: "+e.getMessage());
+            log.error("ES Client not connected: "+e.getMessage(),e);
         }
 
         renderPage(req, resp, settings, errors);

@@ -1,8 +1,7 @@
 package com.palantir.stash.codesearch.elasticsearch;
 
 import com.atlassian.bitbucket.server.ApplicationPropertiesService;
-import com.atlassian.event.api.EventListener;
-import com.atlassian.event.api.EventPublisher;
+import org.elasticsearch.ElasticsearchException;
 import org.elasticsearch.client.Client;
 import org.elasticsearch.common.settings.ImmutableSettings;
 import org.elasticsearch.common.settings.Settings;
@@ -13,16 +12,13 @@ import org.springframework.beans.factory.DisposableBean;
 public class EmbeddedEsServiceImpl implements EmbeddedEsService, DisposableBean {
     private final ApplicationPropertiesService applicationPropertiesService;
     private final ElasticSearchSettings elasticSearchSettings;
-    private final EventPublisher eventPublisher;
 
     private Node node;
     private Client client;
 
-    public EmbeddedEsServiceImpl(ApplicationPropertiesService applicationPropertiesService, ElasticSearchSettings elasticSearchSettings, EventPublisher eventPublisher) {
+    public EmbeddedEsServiceImpl(ApplicationPropertiesService applicationPropertiesService, ElasticSearchSettings elasticSearchSettings) {
         this.applicationPropertiesService = applicationPropertiesService;
         this.elasticSearchSettings = elasticSearchSettings;
-        this.eventPublisher = eventPublisher;
-        this.eventPublisher.register(this);
     }
 
     private String getIndexFolder() {
@@ -53,7 +49,8 @@ public class EmbeddedEsServiceImpl implements EmbeddedEsService, DisposableBean 
         return client;
     }
 
-    private void reset() {
+    @Override
+    public void resetClient() {
         if (client!=null) {
             client.close();
             client = null;
@@ -66,12 +63,11 @@ public class EmbeddedEsServiceImpl implements EmbeddedEsService, DisposableBean 
 
     @Override
     public void destroy() throws Exception {
-        reset();
-        eventPublisher.unregister(this);
+        resetClient();
     }
 
-    @EventListener
-    public void settingsUpdatedEvent(ElasticSearchSettingsUpdatedEvent event) {
-        reset();
+    @Override
+    public void testClient() throws ElasticsearchException {
+        getClient().admin().indices().prepareCreate("test");
     }
 }
