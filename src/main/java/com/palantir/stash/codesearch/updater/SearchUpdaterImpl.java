@@ -20,6 +20,7 @@ import java.util.regex.PatternSyntaxException;
 
 import com.atlassian.sal.api.lifecycle.LifecycleAware;
 import org.elasticsearch.action.admin.indices.alias.IndicesAliasesRequestBuilder;
+import org.elasticsearch.action.admin.indices.create.CreateIndexRequestBuilder;
 import org.elasticsearch.cluster.metadata.AliasMetaData;
 import org.elasticsearch.common.collect.ImmutableOpenMap;
 import org.elasticsearch.common.settings.ImmutableSettings;
@@ -172,9 +173,10 @@ public class SearchUpdaterImpl implements SearchUpdater, LifecycleAware {
 
         String newIndex = random.nextLong() + "-" + System.nanoTime();
         try {
-            es.getClient().admin().indices().prepareCreate(newIndex)
-                // Latest indexed note schema
-                .addMapping("latestindexed",
+            CreateIndexRequestBuilder requestBuilder = es.getClient().admin().indices().prepareCreate(newIndex);
+
+            // Latest indexed note schema
+            requestBuilder.addMapping("latestindexed",
                     jsonBuilder().startObject()
                         .startObject("properties")
                         .startObject("project")
@@ -194,9 +196,10 @@ public class SearchUpdaterImpl implements SearchUpdater, LifecycleAware {
                         .field("index", "not_analyzed")
                         .endObject()
                         .endObject()
-                        .endObject())
-                // Commit schema
-                .addMapping("commit",
+                        .endObject());
+/*
+            // Commit schema
+            requestBuilder.addMapping("commit",
                     jsonBuilder().startObject()
                         .startObject("properties")
                         .startObject("project")
@@ -255,9 +258,9 @@ public class SearchUpdaterImpl implements SearchUpdater, LifecycleAware {
                         .field("index", "not_analyzed")
                         .endObject()
                         .endObject()
-                        .endObject())
-                // File schema
-                .addMapping("file",
+                        .endObject());
+            // File schema
+            requestBuilder.addMapping("file",
                     jsonBuilder().startObject()
                         .startObject("properties")
                         .startObject("project")
@@ -313,8 +316,9 @@ public class SearchUpdaterImpl implements SearchUpdater, LifecycleAware {
                         .endObject()
                         .endObject()
                         .endObject()
-                        .endObject())
-                .setSettings(
+                        .endObject());
+
+            requestBuilder.setSettings(
                     jsonBuilder().startObject()
                         .startObject("analysis")
                         .startObject("analyzer")
@@ -342,8 +346,10 @@ public class SearchUpdaterImpl implements SearchUpdater, LifecycleAware {
                         .startObject("filter")
                         .endObject()
                         .endObject()
-                        .endObject())
-                .get();
+                        .endObject());
+/**/
+            // perform request
+            requestBuilder.get();
         } catch (Exception e) {
             log.error("Caught exception while creating {} ({}), aborting", newIndex, alias, e);
             return false;

@@ -8,3 +8,4 @@
 .es.tar.gz
 .idea
 *.iml
+.DS_Store
