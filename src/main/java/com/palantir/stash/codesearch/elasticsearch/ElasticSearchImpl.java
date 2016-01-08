@@ -21,9 +21,9 @@ public class ElasticSearchImpl implements ElasticSearch {
 
     @Override
     public Client getClient () {
-        if (elasticSearchSettings.isExternal()) {
-            return remoteEsService.getClient();
+        if (elasticSearchSettings.useEmbeddedES()) {
+            return embeddedEsService.getClient();
         }
-        return embeddedEsService.getClient();
+        return remoteEsService.getClient();
     }
 }

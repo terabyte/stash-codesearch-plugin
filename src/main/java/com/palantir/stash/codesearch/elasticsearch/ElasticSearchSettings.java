@@ -15,8 +15,8 @@ public interface ElasticSearchSettings {
     String getPortRange();
     void setPortRange(String portRange);
 
-    boolean isExternal();
-    void setExternal(boolean state);
+    boolean useEmbeddedES();
+    void setUseEmbeddedES(boolean state);
 
     Settings getDefaultSettings();
 }

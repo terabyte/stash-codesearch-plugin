@@ -38,6 +38,7 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import com.palantir.stash.codesearch.elasticsearch.ElasticSearchSettings;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -73,19 +74,23 @@ public class GlobalSettingsServlet extends HttpServlet {
 
     private final SoyTemplateRenderer soyTemplateRenderer;
 
+    private final ElasticSearchSettings elasticSearchSettings;
+
     public GlobalSettingsServlet(
-        ApplicationPropertiesService propertiesService,
-        SettingsManager settingsManager,
-        PermissionValidationService validationService,
-        SearchUpdater searchUpdater,
-        SecurityService securityService,
-        SoyTemplateRenderer soyTemplateRenderer) {
+            ApplicationPropertiesService propertiesService,
+            SettingsManager settingsManager,
+            PermissionValidationService validationService,
+            SearchUpdater searchUpdater,
+            SecurityService securityService,
+            SoyTemplateRenderer soyTemplateRenderer,
+            ElasticSearchSettings elasticSearchSettings) {
         this.propertiesService = propertiesService;
         this.settingsManager = settingsManager;
         this.validationService = validationService;
         this.searchUpdater = searchUpdater;
         this.securityService = securityService;
         this.soyTemplateRenderer = soyTemplateRenderer;
+        this.elasticSearchSettings = elasticSearchSettings;
     }
 
     private static int parseInt(
@@ -155,6 +160,11 @@ public class GlobalSettingsServlet extends HttpServlet {
         resp.setContentType("text/html");
         try {
             ImmutableMap<String, Object> data = new ImmutableMap.Builder<String, Object>()
+                    .put("clusterName", elasticSearchSettings.getClusterName())
+                    .put("hostName", elasticSearchSettings.getHostName())
+                    .put("portRange", elasticSearchSettings.getPortRange())
+                    .put("useEmbeddedES", elasticSearchSettings.useEmbeddedES())
+                    .put("indexFolder", elasticSearchSettings.getIndexFolder())
                 .put("settings", globalSettings)
                 .put("errors", errors)
                 .build();
@@ -264,6 +274,24 @@ public class GlobalSettingsServlet extends HttpServlet {
                 req.getParameter("fileNameBoost"));
         } catch (IllegalArgumentException e) {
             errors.add(e.getMessage());
+        }
+
+        elasticSearchSettings.setUseEmbeddedES("embedded".equals(req.getParameter("useEmbeddedES")));
+        String clusterName = req.getParameter("clusterName");
+        if (clusterName!=null && !clusterName.isEmpty()) {
+            elasticSearchSettings.setClusterName(clusterName);
+        }
+        String hostName = req.getParameter("hostName");
+        if (hostName!=null && !hostName.isEmpty()) {
+            elasticSearchSettings.setHostName(hostName);
+        }
+        String portRange = req.getParameter("portRange");
+        if (portRange!=null && !portRange.isEmpty()) {
+            elasticSearchSettings.setPortRange(portRange);
+        }
+        String indexFolder = req.getParameter("indexFolder");
+        if (indexFolder!=null && !indexFolder.isEmpty()) {
+            elasticSearchSettings.setIndexFolder(indexFolder);
         }
 
         // Update settings object iff no parse errors

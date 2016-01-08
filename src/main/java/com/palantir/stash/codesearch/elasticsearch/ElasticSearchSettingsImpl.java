@@ -12,7 +12,7 @@ public class ElasticSearchSettingsImpl implements ElasticSearchSettings {
     private static final String DEFAULT_CLUSTER_NAME = "stash-codesearch";
     private static final String HOST_NAME_KEY = "codesearch.elasticsearch.host.name";
     private static final String PORT_RANGE_KEY = "codesearch.elasticsearch.port.range";
-    private static final String EXTERNAL_ES_KEY = "codesearch.elasticsearch.external";
+    private static final String EMBEDDED_ES_KEY = "codesearch.elasticsearch.embedded";
 
     private final Settings DEFAULT_SETTINGS = ImmutableSettings.settingsBuilder()
             .classLoader(getClass().getClassLoader())
@@ -92,13 +92,13 @@ public class ElasticSearchSettingsImpl implements ElasticSearchSettings {
     }
 
     @Override
-    public boolean isExternal() {
-        return Boolean.TRUE.equals(pluginSettingsFactory.createGlobalSettings().get(EXTERNAL_ES_KEY));
+    public boolean useEmbeddedES() {
+        return Boolean.TRUE.equals(pluginSettingsFactory.createGlobalSettings().get(EMBEDDED_ES_KEY));
     }
 
     @Override
-    public void setExternal(boolean state) {
-        pluginSettingsFactory.createGlobalSettings().put(EXTERNAL_ES_KEY,state);
+    public void setUseEmbeddedES(boolean state) {
+        pluginSettingsFactory.createGlobalSettings().put(EMBEDDED_ES_KEY,state);
         settingsUpdated();
     }
 
