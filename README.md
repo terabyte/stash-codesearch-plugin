@@ -1,5 +1,17 @@
 # Stash Codesearch 
 
+# NOTE: THIS PLUGIN IS DEPRECATED
+
+Modern Bitbucket Server (4.6+ I believe) has built-in code search support (which is even implemented in a way very similar to this plugin), which is more featureful than this plugin provides.  It is recommended that upon upgrading to bitbucket 4.6+, this plugin should be removed.
+
+If anyone is wanting to add features to atlassian's code search you should talk to atlassian first, the code for their plugin may be open source (or open-source-able?)  Forking this project and using it should be a last resort as Atlassian's implementation is superior.
+
+Many thanks to all the contributors who helped out with this plugin in the past!
+
+-Carl
+
+# Old Documentation
+
 Bitbucket Server 4.X Build Status: [![Build Status](https://travis-ci.org/terabyte/stash-codesearch-plugin.svg?branch=master)](https://travis-ci.org/terabyte/stash-codesearch-plugin)
 
 Stash 3.X Build Status: [![Build Status](https://travis-ci.org/terabyte/stash-codesearch-plugin.svg?branch=stash-3.x-backports)](https://travis-ci.org/terabyte/stash-codesearch-plugin)
