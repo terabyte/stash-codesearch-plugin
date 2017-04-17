@@ -6,12 +6,12 @@
 
 package com.palantir.stash.codesearch.elasticsearch;
 
+import com.atlassian.sal.api.lifecycle.LifecycleAware;
 import org.elasticsearch.common.settings.SettingsException;
 import org.elasticsearch.common.transport.InetSocketTransportAddress;
 import org.elasticsearch.client.transport.TransportClient;
-import org.springframework.beans.factory.DisposableBean;
 
-public class ElasticSearchImpl implements ElasticSearch, DisposableBean {
+public class ElasticSearchImpl implements ElasticSearch, LifecycleAware {
 
     private final TransportClient client;
 
@@ -21,12 +21,20 @@ public class ElasticSearchImpl implements ElasticSearch, DisposableBean {
 
     public ElasticSearchImpl () throws SettingsException {
         client = new TransportClient();
+    }
 
-        // HACK: get hostname from elasticsearch.yml
+    @Override
+    public TransportClient getClient () {
+        return client;
+    }
+
+    @Override
+    public void onStart() {
+        // HACK: get hostname from elasticsearch.yml todo: use elasticsearch.yaml as the source of the default
         String host = client.settings().get("client.transport.cluster.host");
         if (host == null) {
             throw new SettingsException(
-                "client.transport.cluster.host must be set to a cluster data node address");
+                    "client.transport.cluster.host must be set to a cluster data node address");
         }
 
         // HACK: get port/port range from elasticsearch.yml (format for ranges is 1234-2345)
@@ -34,7 +42,7 @@ public class ElasticSearchImpl implements ElasticSearch, DisposableBean {
         String portSetting = client.settings().get("client.transport.cluster.port");
         if (portSetting == null) {
             throw new SettingsException(
-                "client.transport.cluster.port mulst be set to a valid port range.");
+                    "client.transport.cluster.port mulst be set to a valid port range.");
         }
         String[] toks = portSetting.split("-");
         if (toks.length == 1) {
@@ -52,7 +60,7 @@ public class ElasticSearchImpl implements ElasticSearch, DisposableBean {
             }
         } else {
             throw new SettingsException(
-                "Error parsing client.transport.cluster.port (too may dashes)");
+                    "Error parsing client.transport.cluster.port (too may dashes)");
         }
 
         // Create a new transport address for reach port in the port range
@@ -62,13 +70,7 @@ public class ElasticSearchImpl implements ElasticSearch, DisposableBean {
     }
 
     @Override
-    public TransportClient getClient () {
-        return client;
-    }
-
-    @Override
-    public void destroy () {
+    public void onStop() {
         client.close();
     }
-
 }

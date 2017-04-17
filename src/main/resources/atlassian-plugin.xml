@@ -33,6 +33,7 @@
 
     <component key="es" class="com.palantir.stash.codesearch.elasticsearch.ElasticSearchImpl" public="true">
         <interface>com.palantir.stash.codesearch.elasticsearch.ElasticSearch</interface>
+        <interface>com.atlassian.sal.api.lifecycle.LifecycleAware</interface>
     </component>
 
     <component key="settings-manager" class="com.palantir.stash.codesearch.admin.SettingsManagerImpl" public="true">
@@ -49,6 +50,7 @@
 
     <component key="search-updater" class="com.palantir.stash.codesearch.updater.SearchUpdaterImpl" public="true">
         <interface>com.palantir.stash.codesearch.updater.SearchUpdater</interface>
+        <interface>com.atlassian.sal.api.lifecycle.LifecycleAware</interface>
     </component>
 
     <component key="indexer-event-listener" class="com.palantir.stash.codesearch.event.IndexerEventListener" />

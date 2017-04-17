@@ -6,4 +6,5 @@
 .settings/
 .es/
 .es.tar.gz
-
+.idea
+*.iml
