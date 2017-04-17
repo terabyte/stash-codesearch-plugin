@@ -7,6 +7,8 @@ import java.util.Map;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import com.palantir.stash.codesearch.elasticsearch.ElasticSearch;
+import com.palantir.stash.codesearch.elasticsearch.ElasticSearchSettings;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -49,6 +51,10 @@ public class GlobalSettingsServletTest {
     private SecurityService ss;
     @Mock
     private SoyTemplateRenderer str;
+    @Mock
+    private ElasticSearchSettings elasticSearchSettings;
+    @Mock
+    private ElasticSearch es;
 
     private GlobalSettingsServlet servlet;
 
@@ -60,8 +66,13 @@ public class GlobalSettingsServletTest {
         Mockito.when(sm.getGlobalSettings()).thenReturn(gs);
         Mockito.when(req.getRequestURL()).thenReturn(new StringBuffer(SOME_URL));
         Mockito.when(res.getWriter()).thenReturn(pw);
+        Mockito.when(elasticSearchSettings.getClusterName()).thenReturn("needs wired tests");
+        Mockito.when(elasticSearchSettings.getHostName()).thenReturn("needs wired tests");
+        Mockito.when(elasticSearchSettings.getIndexFolder()).thenReturn("needs wired tests");
+        Mockito.when(elasticSearchSettings.getPortRange()).thenReturn("needs wired tests");
+        Mockito.when(elasticSearchSettings.useEmbeddedES()).thenReturn(false);
 
-        servlet = new GlobalSettingsServlet(aps, sm, pvs, su, ss, str);
+        servlet = new GlobalSettingsServlet(aps, sm, pvs, su, ss, str, elasticSearchSettings, es);
     }
 
     @Test
@@ -74,6 +85,7 @@ public class GlobalSettingsServletTest {
 
         Mockito.verify(res).sendRedirect(Mockito.anyString());
         Mockito.verify(res, Mockito.never()).getWriter();
+        Mockito.verify(elasticSearchSettings, Mockito.never()).getClusterName();
     }
 
     @Test
@@ -86,6 +98,7 @@ public class GlobalSettingsServletTest {
 
         Mockito.verify(res).sendError(Mockito.eq(HttpServletResponse.SC_UNAUTHORIZED), Mockito.any(String.class));
         Mockito.verify(res, Mockito.never()).getWriter();
+        Mockito.verify(elasticSearchSettings, Mockito.never()).getClusterName();
     }
 
     @Test
@@ -102,6 +115,7 @@ public class GlobalSettingsServletTest {
             Mockito.eq("plugin.page.codesearch.globalSettingsPage"),
             mapCaptor.capture());
         Assert.assertEquals(gs, mapCaptor.getValue().get("settings"));
+        Mockito.verify(elasticSearchSettings, Mockito.atLeastOnce()).getClusterName();
     }
 
     @Test
@@ -140,6 +154,8 @@ public class GlobalSettingsServletTest {
             AdditionalMatchers.eq(GlobalSettings.COMMIT_BODY_BOOST_DEFAULT, 1E-9),
             AdditionalMatchers.eq(GlobalSettings.FILE_NAME_BOOST_DEFAULT, 1E-9));
         Mockito.verify(res).setContentType(Mockito.contains("text/html"));
+
+        Mockito.verify(elasticSearchSettings, Mockito.atLeastOnce()).getClusterName();
     }
 
 }

@@ -2,6 +2,11 @@
 
 /**
  * Global settings page template
+ * @param clusterName
+ * @param hostName
+ * @param portRange
+ * @param useEmbeddedES
+ * @param indexFolder
  * @param settings
  * @param errors
  */
@@ -39,6 +44,7 @@
 {call aui.group.group} {param content} {call aui.form.form}
     {param action: '' /}
     {param content}
+        <fieldset>
         {call aui.form.checkboxField}
             {param legendContent: 'Indexing' /}
             {param fields: [[
@@ -48,6 +54,50 @@
                 ]] /}
             {param descriptionText: 'Check this box to enable indexing of new source code & commits' /}
         {/call}
+        </fieldset>
+
+        <fieldset>
+        <div class="field-group">
+            <label for="useEmbeddedES">Server Type</label>
+            <select class="select" id="useEmbeddedES" name="useEmbeddedES">
+                <option value="remote"{if not $useEmbeddedES} selected{/if}>Remote</option>
+                <option value="embedded"{if $useEmbeddedES} selected{/if}>Embedded</option>
+            </select>
+            <div class="description">Connect to a Remote ES server, or use an Embedded one</div>
+        </div>
+        {call aui.form.textField}
+            {param id: 'clusterName' /}
+            {param labelContent: 'Cluster Name' /}
+            {param value: $clusterName /}
+            {param descriptionText: 'The name of the ES cluster' /}
+        {/call}
+
+        <div class="remote-options">
+        {call aui.form.textField}
+            {param id: 'hostName' /}
+            {param labelContent: 'Host Name' /}
+            {param value: $hostName /}
+            {param descriptionText: 'The server that the remote ES cluster can be found on' /}
+        {/call}
+        {call aui.form.textField}
+            {param id: 'portRange' /}
+            {param labelContent: 'Port Range' /}
+            {param value: $portRange /}
+            {param descriptionText: 'The port range used to connect to the remote ES cluster' /}
+        {/call}
+        </div>
+
+        <div class="embedded-options">
+        {call aui.form.textField}
+            {param id: 'indexFolder' /}
+            {param labelContent: 'Index Folder' /}
+            {param value: $indexFolder /}
+            {param descriptionText: 'Path relative to bitbucket home to use for storing embedded index data' /}
+        {/call}
+        </div>
+        </fieldset>
+
+        <fieldset>
         {call aui.form.textField}
             {param id: 'maxConcurrentIndexing' /}
             {param labelContent: 'Indexing Concurrency Limit' /}
@@ -72,6 +122,9 @@
             {param value: $settings.noHighlightExtensions /}
             {param descriptionText: 'Comma-separated list of file extensions to exclude from syntax highlighting' /}
         {/call}
+        </fieldset>
+
+        <fieldset>
         {call aui.form.textField}
             {param id: 'maxPreviewLines' /}
             {param labelContent: 'Preview Limit' /}
@@ -96,6 +149,9 @@
             {param value: $settings.pageSize /}
             {param descriptionText: 'Number of results to display per page' /}
         {/call}
+        </fieldset>
+
+        <fieldset>
         {call aui.form.textField}
             {param id: 'commitHashBoost' /}
             {param labelContent: 'Commit Hash Boost' /}
@@ -120,6 +176,8 @@
             {param value: $settings.fileNameBoost/}
             {param descriptionText: 'Boosting factor of results with matching file names' /}
         {/call}
+        </fieldset>
+
         {call aui.form.buttons}
             {param content}
                 {call aui.form.submit}

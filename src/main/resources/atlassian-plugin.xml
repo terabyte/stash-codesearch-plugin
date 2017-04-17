@@ -35,6 +35,20 @@
         <interface>com.palantir.stash.codesearch.elasticsearch.ElasticSearch</interface>
     </component>
 
+    <component key="elasticSearchSettings" class="com.palantir.stash.codesearch.elasticsearch.ElasticSearchSettingsImpl" public="true">
+        <interface>com.palantir.stash.codesearch.elasticsearch.ElasticSearchSettings</interface>
+    </component>
+
+    <component key="embeddedEsService" class="com.palantir.stash.codesearch.elasticsearch.EmbeddedEsServiceImpl" public="true">
+        <interface>com.palantir.stash.codesearch.elasticsearch.EmbeddedEsService</interface>
+        <interface>org.springframework.beans.factory.DisposableBean</interface>
+    </component>
+
+    <component key="remoteEsService" class="com.palantir.stash.codesearch.elasticsearch.RemoteEsServiceImpl" public="true">
+        <interface>com.palantir.stash.codesearch.elasticsearch.RemoteEsService</interface>
+        <interface>org.springframework.beans.factory.DisposableBean</interface>
+    </component>
+
     <component key="settings-manager" class="com.palantir.stash.codesearch.admin.SettingsManagerImpl" public="true">
         <interface>com.palantir.stash.codesearch.admin.SettingsManager</interface>
     </component>
@@ -49,6 +63,7 @@
 
     <component key="search-updater" class="com.palantir.stash.codesearch.updater.SearchUpdaterImpl" public="true">
         <interface>com.palantir.stash.codesearch.updater.SearchUpdater</interface>
+        <interface>com.atlassian.sal.api.lifecycle.LifecycleAware</interface>
     </component>
 
     <component key="indexer-event-listener" class="com.palantir.stash.codesearch.event.IndexerEventListener" />

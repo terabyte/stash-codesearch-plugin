@@ -42,17 +42,11 @@ public class RepositorySettingsServlet extends HttpServlet {
     private static final Logger log = LoggerFactory.getLogger(RepositorySettingsServlet.class);
 
     private final ApplicationPropertiesService propertiesService;
-
     private final SettingsManager settingsManager;
-
     private final PermissionValidationService validationService;
-
     private final RepositoryService repositoryService;
-
     private final SearchUpdater searchUpdater;
-
     private final SecurityService securityService;
-
     private final SoyTemplateRenderer soyTemplateRenderer;
 
     public RepositorySettingsServlet(

@@ -19,8 +19,9 @@
             <plugin>
                 <groupId>com.atlassian.maven.plugins</groupId>
                 <artifactId>bitbucket-maven-plugin</artifactId>
-                <version>6.1.0</version>
+                <version>${amps.version}</version>
                 <extensions>true</extensions>
+
                 <configuration>
                     <products>
                         <product>
@@ -134,6 +135,7 @@
             <artifactId>joda-time</artifactId>
             <version>2.3</version>
         </dependency>
+
         <dependency>
             <groupId>org.apache.httpcomponents</groupId>
             <artifactId>httpclient</artifactId>
@@ -157,18 +159,21 @@
             <artifactId>logback-classic</artifactId>
             <scope>provided</scope>
         </dependency>
+<!-- this is bundled with every atlassian app
         <dependency>
             <groupId>com.atlassian.sal</groupId>
             <artifactId>sal-api</artifactId>
             <scope>provided</scope>
         </dependency>
+-->
     </dependencies>
     <properties>
+        <dev.mode>true</dev.mode>
         <amps.version>6.1.0</amps.version>
-        <bitbucket.version>4.0.2</bitbucket.version>
+        <bitbucket.version>4.0.0</bitbucket.version>
         <bitbucket.data.version>${bitbucket.version}</bitbucket.data.version>
         <bitbucket.containerId>tomcat8x</bitbucket.containerId>
-        <elasticsearch.version>1.6.0</elasticsearch.version>
+        <elasticsearch.version>1.5.2</elasticsearch.version> <!-- something changed in 1.6.0 that breaks the embedded es - unable to locate SPI's -->
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 
         <!-- This comes from the bitbucket source, last updated as of 4.0.2 -->
